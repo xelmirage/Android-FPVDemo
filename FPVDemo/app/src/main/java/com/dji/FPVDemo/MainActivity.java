@@ -116,6 +116,7 @@ public class MainActivity extends Activity implements SurfaceTextureListener,OnC
     protected File mFlyLogDir;
     protected StringBuffer outMessage;
     protected SettingsDefinitions.VideoResolution videoResolution;
+    protected int videoResolutionWidth,videoResolutionHeight;
     protected int screenWidth,screenHeight;
 
     @Override
@@ -183,6 +184,13 @@ public class MainActivity extends Activity implements SurfaceTextureListener,OnC
 
                     videoResolution=resolutionAndFrameRate.getResolution();
                     showToast(videoResolution.toString());
+                    String videoResString=videoResolution.toString();
+                    videoResString=videoResString.split("_")[1];
+                    String[] stringRes=videoResString.split("x");
+                    videoResolutionWidth=Integer.parseInt(stringRes[0]);
+                    videoResolutionHeight=Integer.parseInt(stringRes[1]);
+
+                    //showToast("split width:"+ stringRes[0]+" height:"+stringRes[1]);
 
 
 
@@ -230,25 +238,46 @@ public class MainActivity extends Activity implements SurfaceTextureListener,OnC
 
         screenSize();
 
-
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
-
-        params.height = screenHeight;
-        params.width =params.height/512*640;
-        params.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-
-        //
         StringBuffer toastString=new StringBuffer();
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+        float screenRatio=(float)screenWidth/(float)screenHeight;
+        float videoRatio=(float)videoResolutionWidth/(float)videoResolutionHeight;
+        toastString=new StringBuffer();
+        toastString.append("screenRatio:").append(screenRatio)
+                .append(" videoRatio").append(videoRatio);
+        showToast(toastString.toString());
+
+        if (screenRatio>videoRatio) {
+            params.height = screenHeight;
+            params.width = params.height / videoResolutionHeight * videoResolutionWidth;
+
+        }
+        else{
+
+            params.width = screenWidth;
+            toastString=new StringBuffer();
+            toastString.append("params.width:").append(params.width)
+                    .append(" videoResolutionWidth").append(videoResolutionWidth)
+                    .append(" videoResolutionHeight").append(videoResolutionHeight)
+                    .append(" params.width/Width*Height").append((int)((float)params.width/(float)videoResolutionWidth*(float)videoResolutionHeight));
+
+            showToast(toastString.toString());
+            params.height = (int)((float)params.width/(float)videoResolutionWidth*(float)videoResolutionHeight) ;
+
+        }
+        params.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+        //
+
         toastString.append("Original height:").append(mVideoSurface.getHeight())
                 .append("Original width:").append(mVideoSurface.getWidth());
 
-        showToast(toastString.toString());
+        //showToast(toastString.toString());
 
         toastString=new StringBuffer();
         toastString.append("new height:").append(params.height)
                 .append("new width:").append(params.width);
 
-        showToast(toastString.toString());
+        //showToast(toastString.toString());
 
         mVideoSurface.setLayoutParams(params);
 

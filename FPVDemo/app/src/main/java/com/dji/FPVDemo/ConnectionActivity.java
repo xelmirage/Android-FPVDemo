@@ -2,6 +2,7 @@ package com.dji.FPVDemo;
 
 import android.Manifest;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -58,7 +61,22 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
     private AtomicBoolean isRegistrationInProgress = new AtomicBoolean(false);
     private static final int REQUEST_PERMISSION_CODE = 12345;
 
+    private BluetoothAdapter mBluetoothAdapter;
+    private static final int REQUEST_ENABLE_BT = 1;
+    private ConnectedThread mConnectedThread;
 
+    protected void bluetoothOn(){
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(getApplicationContext(), "该设备不支持蓝牙", Toast.LENGTH_SHORT).show();
+        }
+
+        //请求开启蓝牙
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +89,16 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
         IntentFilter filter = new IntentFilter();
         filter.addAction(FPVDemoApplication.FLAG_CONNECTION_CHANGE);
         registerReceiver(mReceiver, filter);
+
+        bluetoothOn();
+
+        //进入蓝牙设备连接界面
+        Intent intent = new Intent();
+        intent.setClass(getApplicationContext(), DevicesListActivity.class);
+        startActivity(intent);
+
+
+
     }
 
     /**
@@ -179,6 +207,40 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
     public void onResume() {
         Log.e(TAG, "onResume");
         super.onResume();
+
+        //回到主界面后检查是否已成功连接蓝牙设备
+        if (BluetoothUtils.getBluetoothSocket() == null || mConnectedThread != null) {
+            showToast("bluetooth not connected");
+            return;
+        }
+        showToast("bluetooth connected");
+
+
+        Handler handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what) {
+                    case ConnectedThread.MESSAGE_READ:
+
+                        break;
+                }
+
+            }
+        };
+
+        mConnectedThread = new ConnectedThread(BluetoothUtils.getBluetoothSocket(), handler);
+        mConnectedThread.start();
+
+        String sendStr = "aaaaaaaaaaaaa";
+        char[] chars = sendStr.toCharArray();
+        byte[] bytes = new byte[chars.length];
+        for (int i=0; i < chars.length; i++) {
+            bytes[i] = (byte) chars[i];
+        }
+
+        mConnectedThread.write(bytes);
+
     }
 
     @Override
