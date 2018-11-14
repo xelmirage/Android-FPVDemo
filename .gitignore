@@ -41,4 +41,4 @@ captures/
 *.jks
 FPVDemo/app/src/main/AndroidManifest.xml
 
-.idea/*
+FPVDemo/.idea/
