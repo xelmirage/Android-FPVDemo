@@ -39,3 +39,6 @@ captures/
 
 # Keystore files
 *.jks
+FPVDemo/app/src/main/AndroidManifest.xml
+
+.idea/*

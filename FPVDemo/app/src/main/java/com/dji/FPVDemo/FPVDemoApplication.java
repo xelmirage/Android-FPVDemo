@@ -169,4 +169,26 @@ public class FPVDemoApplication extends Application{
         }
     };
 
+
+
+
+
+    public static synchronized Aircraft getAircraftInstance() {
+        if (!isAircraftConnected()) return null;
+        return (Aircraft) getProductInstance();
+    }
+    public static boolean isAircraftConnected() {
+        return getProductInstance() != null && getProductInstance() instanceof Aircraft;
+    }
+    public static boolean isFlightControllerAvailable() {
+        return isProductModuleAvailable() && isAircraft() &&
+                (null != FPVDemoApplication.getAircraftInstance().getFlightController());
+    }
+    public static boolean isProductModuleAvailable() {
+        return (null != FPVDemoApplication.getProductInstance());
+    }
+    public static boolean isAircraft() {
+        return FPVDemoApplication.getProductInstance() instanceof Aircraft;
+    }
+
 }
